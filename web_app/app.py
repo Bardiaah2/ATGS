@@ -3,20 +3,22 @@ Web application for University of Oregon
 student/advisor ticketing system and graduation planner
 '''
 
-from shlex import join
 from flask import Flask, request, render_template, redirect, url_for, session
+from flask_migrate import Migrate
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import case
 from sqlalchemy.orm import joinedload
+import os
 
 app = Flask(__name__)
 
 # Configure PostgreSQL connection
-app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://kyran@localhost/atgs'
+app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'postgresql://localhost/atgs')
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 app.config['SECRET_KEY'] = 'dev' # TODO: Temporary, replace later
 
 db = SQLAlchemy(app)
+migrate = Migrate(app, db)
 
 # Define user model that matches database table
 class User(db.Model):
@@ -73,7 +75,7 @@ def signup():
         if existing:
             return f"User with email {email} already exists.", 400
 
-        new_user = User(email=email, display_name=name, role=role)
+        new_user = User(email=email, display_name=name, role=role) # type:ignore
         db.session.add(new_user)
         db.session.commit()
 
@@ -96,7 +98,7 @@ def submit_ticket():
         subject = request.form.get('subject')
         message = request.form.get('message')
 
-        new_ticket = Ticket(author=author, department=department, subject=subject, message=message)
+        new_ticket = Ticket(author=author, department=department, subject=subject, message=message) # type:ignore
         db.session.add(new_ticket)
         db.session.commit()
 
@@ -118,10 +120,12 @@ def tickets():
         (Ticket.status == 'closed', 3),
     )
 
-    if current_user.role in ['advisor', 'admin']:
-        tickets = Ticket.query.order_by(status_order, Ticket.last_updated.desc()).options(joinedload(Ticket.author_user)).all()  # Fetch all tickets from the database
+    if current_user.role in ['advisor', 'admin']: # type:ignore
+        # Fetch all tickets from the database
+        tickets = Ticket.query.order_by(status_order, Ticket.last_updated.desc()).options(joinedload(Ticket.author_user)).all()  # type:ignore
     else:
-        tickets = Ticket.query.order_by(status_order, Ticket.last_updated.desc()).filter_by(author=user_id).options(joinedload(Ticket.author_user)).all()
+        # Fetch only tickets authored by the student
+        tickets = Ticket.query.order_by(status_order, Ticket.last_updated.desc()).filter_by(author=user_id).options(joinedload(Ticket.author_user)).all() # type:ignore
     
     return render_template('tickets.html', tickets=tickets)
 

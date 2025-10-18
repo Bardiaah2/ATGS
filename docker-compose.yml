@@ -1,0 +1,27 @@
+version: "3.9"
+services:
+  web:
+    build: .
+    working_dir: /app
+    ports:
+      - "5001:5000"
+    env_file: ./web_app/.env
+    depends_on:
+      - db
+    volumes:
+      - .:/app  # allows live code updates without rebuilding
+
+  db:
+    image: postgres:16
+    restart: always
+    env_file: ./web_app/.env
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
