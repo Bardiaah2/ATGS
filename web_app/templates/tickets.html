@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>All Tickets</title>
+    <style>
+        .ticket { border: 1px solid #ccc; padding: 10px; margin-bottom: 10px; cursor: pointer; }
+        .ticket .inline-info { white-space: nowrap; }
+        .details { display: none; padding: 10px; background-color: #f9f9f9; }
+        .status-open { color: green; font-weight: bold; }
+        .status-in_progress { color: goldenrod; font-weight: bold; }
+        .status-closed { color: red; font-weight: bold; }
+    </style>
+    <script>
+        function toggleDetails(id) {
+            const details = document.getElementById("details-" + id);
+            details.style.display = (details.style.display === "none" || details.style.display === "") ? "block" : "none";
+        }
+    </script>
+</head>
+<body>
+    <h1>Tickets</h1>
+    {% if tickets %}
+        {% for ticket in tickets %}
+            <div class="ticket" onclick="toggleDetails({{ ticket.ticket_id }})" style="user-select: none;">
+                <div class="inline-info">
+                    <strong>ID:</strong> {{ ticket.ticket_id }} |
+                    <strong>Subject:</strong> {{ ticket.subject }} |
+                    <strong>Author:</strong> {{ ticket.author_user.display_name }} |
+                    <strong>Status:</strong>
+                    <span class="status-{{ ticket.status|lower|replace(' ', '_') }}">{{ ticket.status }}</span>
+                </div>
+                <div class="details" id="details-{{ ticket.ticket_id }}">
+                    <p><strong>Department:</strong> {{ ticket.department }}</p>
+                    <p><strong>Message:</strong> {{ ticket.message }}</p>
+                    <p><strong>Created At:</strong> {{ ticket.created_at }}</p>
+                    <p><strong>Last Updated:</strong> {{ ticket.last_updated }}</p>
+                </div>
+            </div>
+        {% endfor %}
+    {% else %}
+        <p>No tickets found.</p>
+    {% endif %}
+    <p><a href="{{ url_for('home') }}">Return to Home</a></p>
+</body>
+</html>
