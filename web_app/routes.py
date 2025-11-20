@@ -19,7 +19,7 @@ def login(user_id):
     session['user_id'] = user_id
     return redirect(url_for('main.submit_ticket'))
 
-@bp.route('/signup', methods=['GET', 'POST'])
+@bp.route('/api/signup', methods=['GET', 'POST'])
 def signup():
     if request.method == 'POST':
         email = request.form.get('email')
@@ -175,3 +175,48 @@ def tickets():
     }
    
     return jsonify(response), HTTPStatus.OK
+
+@bp.route("/api/ticket_details", methods=['GET'])
+def ticket_details():
+    response: dict[str, str | None] = {'ticket_id': None,
+                'author': None,
+                'assignee': None,
+                'department': None,
+                'priority': None,
+                'subject': None,
+                'body': None,
+                'status': None,
+                'created_at': None,
+                'last_updated': None,
+                
+                'message': None,
+                'error': None}
+    
+    ticket_id = request.args.get('ticket_id')
+    if not ticket_id:
+        response['error'] = "Missing required query parameter: 'ticket_id'"
+        return jsonify(response), HTTPStatus.BAD_REQUEST
+    
+    response['ticket_id'] = ticket_id
+    user_id = session.get('user_id')
+
+    if not user_id:
+        response['error'] = "No user logged in"
+        return jsonify(response), HTTPStatus.UNAUTHORIZED
+    
+    ticket = Ticket.query.filter_by(ticket_id=ticket_id).first()
+    if not ticket:
+        response['error'] = "Ticket not found"
+        return jsonify(response), HTTPStatus.NOT_FOUND
+    
+    response.update({
+    'author': ticket.author_user.display_name if ticket.author_user else None,
+    'assignee': ticket.assignee_user.display_name if ticket.assignee_user else None,
+    'department': ticket.dept_name.name if ticket.dept_name else None,
+    'priority': ticket.priority,
+    'subject': ticket.subject,
+    'body': ticket.message,
+    'status': TicketStatus(ticket.status).name if ticket.status is not None else None,
+    'created_at': ticket.created_at.isoformat() if ticket.created_at else None,
+    'last_updated': ticket.last_updated.isoformat() if ticket.last_updated else None,
+})
