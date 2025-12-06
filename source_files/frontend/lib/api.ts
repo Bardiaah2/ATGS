@@ -223,7 +223,8 @@ export interface TicketDetails {
     message: string;
     created_at: string;
     ticket: number;
-    author: number;
+    author_id: number;
+    author_name: string;
   }>;
 }
 
@@ -248,7 +249,8 @@ export interface ArchivedTicketDetailsResponse {
     message: string;
     created_at: string;
     ticket: number;
-    author: number;
+    author_id: number;
+    author_name: string;
   }>;
 }
 

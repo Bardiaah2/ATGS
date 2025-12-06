@@ -460,6 +460,7 @@ export default function TicketPage() {
         ? await getArchivedTicketDetails(ticketId)
         : await getTicketDetails(ticketId);
       setTicketDetails(details);
+      console.log("Fetched ticket details:", details);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load ticket");
       console.error("Error fetching ticket:", err);
@@ -585,9 +586,7 @@ export default function TicketPage() {
           department={ticketDetails.department}
           requester={ticketDetails.author}
           createdAt={ticketDetails.created_at}
-          studentNumber={
-            Number.isNaN(numericTicketId) ? undefined : numericTicketId.toString()
-          }
+          studentNumber={ticketDetails.author_id}
         />
         <NewResponse ticketId={numericTicketId as number} onSubmitted={fetchTicket} />
         <Chain responses={ticketDetails.responses} />
